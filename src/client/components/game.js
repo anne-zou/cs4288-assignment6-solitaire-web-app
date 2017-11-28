@@ -42,7 +42,8 @@ class Game extends Component { // TODO make draw count configurable
     }
 
     validateAndMakeMove(move) {
-        this.setState({ selected: null});
+        this.setState({ selected: null });
+
         // Send move to server to be validated
         $.ajax({
                 url: `/v1/game/${this.props.match.params.id}`,
@@ -94,7 +95,7 @@ class Game extends Component { // TODO make draw count configurable
          
     }
 
-    onDrawPileClick(ev) { // one click, no need for separate from/to
+    onDrawPileClick(ev) { // one click, no need for separate from/to handling
         ev.stopPropagation(); // prevent event from bubbling up
 
         // Check if something is already selected
@@ -128,16 +129,6 @@ class Game extends Component { // TODO make draw count configurable
             // Send move to server to be validated
             this.validateAndMakeMove(move);
 
-            // Make the move
-            // const newDrawPile = drawPile.slice(0, -1 * num);
-            // const newDiscardPile = discardPile.concat(move.cards);
-            // newDiscardPile.forEach(card => card.up = true);
-            // this.setState({
-            //     draw: newDrawPile,
-            //     discard: newDiscardPile,
-            //     selected: null
-            // });
-
         } else { // no cards left in the draw pile
             const move = {
                 cards: discardPile.reverse().map(card => {
@@ -152,15 +143,6 @@ class Game extends Component { // TODO make draw count configurable
             // Send move to server to be validated
             this.validateAndMakeMove(move);
 
-            // Make the move
-            // const newDrawPile = move.cards;
-            // const newDiscardPile = [];
-            // newDrawPile.forEach(card => card.up = false);
-            // this.setState({
-            //     draw: newDrawPile,
-            //     discard: newDiscardPile,
-            //     selected: null
-            // });
         }
     }
 
@@ -236,17 +218,6 @@ class Game extends Component { // TODO make draw count configurable
                 // Send move to server to be validated
                 this.validateAndMakeMove(move);
 
-                // Make move
-                // const newSrc = this.state[selected.src].slice(0, -1);
-                // if (newSrc.length > 0)
-                //     newSrc[newSrc.length - 1].up = true;
-                // const newDst = thisStack.concat(move.cards);
-                // this.setState({
-                //     [selected.src]: newSrc,
-                //     [thisStackId]: newDst,
-                //     selected: null
-                // });
-
             } else {
                 // Cancel selection
                 this.setState({ selected: null });
@@ -314,16 +285,6 @@ class Game extends Component { // TODO make draw count configurable
                 // Send move to server to be validated
                 this.validateAndMakeMove(move);
 
-                // Make move
-                // const newSrcPile = this.state[selected.src].slice(0, selected.index);
-                // if (newSrcPile.length > 0)
-                //     newSrcPile[newSrcPile.length - 1].up = true;
-                // const newDstPile = thisPile.concat(selected.cards);
-                // this.setState({
-                //     [selected.src]: newSrcPile,
-                //     [thisPileId]: newDstPile,
-                //     selected: null
-                // });
             } else {
                 // Cancel selection
                 this.setState({ selected: null });
@@ -401,6 +362,7 @@ class Game extends Component { // TODO make draw count configurable
     }
 
     render() {
+        console.log(this.state);
         return <div onClick={this.onBackgroundClick}>
             <div className="card-row">
                 <Pile

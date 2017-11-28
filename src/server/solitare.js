@@ -3,7 +3,6 @@
 
 
 let shuffleCards = (includeJokers = false) => {
-    //return [{ "suit": "clubs", "value": 7 }, { "suit": "diamonds", "value": 12 }];
 
     /* Return an array of 52 cards (if jokers is false, 54 otherwise). Carefully follow the instructions in the README */
     let cards = [];
@@ -84,7 +83,7 @@ let validMoves = (state, drawCount) => {
 
     let validMoves = [];
 
-    // Possible destination piles (other than for the draw move)
+    // Possible destination piles (other than the discard pile)
     const foundationPiles = ['stack1', 'stack2', 'stack3', 'stack4'];
     const tableauPiles = ['pile1', 'pile2', 'pile3', 'pile4', 'pile5', 'pile6', 'pile7'];
 
@@ -101,11 +100,14 @@ let validMoves = (state, drawCount) => {
         if (srcPile === dstPile)
             return false;
         const srcCard = state[srcPile][srcIndex];
-        if (state[dstPile].length === 0) {
+        if (state[dstPile].length === 0) { // empty destination pile
             return srcCard.value === dstBaseRank;
-        } else {
+            // dstBaseRank is the card rank that can go on an empty pile
+        } else { // non-empty destination pile
             const dstCard = state[dstPile][state[dstPile].length - 1];
             return condition(srcCard, dstCard);
+            // condition defines the relationship between the card being moved
+            // and the top card of the destination pile (returns a boolean)
         }
     }
 
@@ -126,6 +128,8 @@ let validMoves = (state, drawCount) => {
     }
 
     const trySingleCardMoveToEachFoundationPile = (srcPile) => {
+        // find all possible moves from srcPile to any of the 4 foundation piles
+        // in this case only one card (the top card of srcPile) is moved
         foundationPiles.forEach(dstPile => {
             if (isValidMove(srcPile, dstPile, state[srcPile].length - 1, 'ace', (srcCard, dstCard) =>
                     srcCard.suit === dstCard.suit && isOneRankHigher(srcCard, dstCard))) {
@@ -140,6 +144,7 @@ let validMoves = (state, drawCount) => {
     }
 
     const tryMultiCardMoveToEachTableauPile = (srcPile, index) => {
+        // find all possible moves from srcPile to any of the 7 tableau piles
         tableauPiles.forEach(dstPile => {
             if (isValidMove(srcPile, dstPile, index, 'king', (srcCard, dstCard) =>
                     oppositeSuitColors(srcCard, dstCard) && isOneRankHigher(dstCard, srcCard))) {
@@ -172,6 +177,15 @@ let validMoves = (state, drawCount) => {
         tryMultiCardMoveToEachTableauPile(srcPile, state[srcPile].length - 1);
     });
 
+    // Find all valid moves from tableau piles to destination piles
+    tableauPiles.forEach(srcPile => {
+        trySingleCardMoveToEachFoundationPile(srcPile);
+        state[srcPile].forEach((card, index) => {
+            if (card.up)
+                tryMultiCardMoveToEachTableauPile(srcPile, index);
+        });
+    });
+
     // The possible draw move
     if (state.draw.length === 0) { // empty draw pile
         validMoves.push({
@@ -200,40 +214,20 @@ let validMoves = (state, drawCount) => {
         });
     }
 
-    // Find all valid moves from tableau piles to destination piles
-    tableauPiles.forEach(srcPile => {
-        trySingleCardMoveToEachFoundationPile(srcPile);
-        state[srcPile].forEach((card, index) => {
-            if (card.up)
-                tryMultiCardMoveToEachTableauPile(srcPile, index);
-        });
-    });
-
     return validMoves;
 };
 
 let getNewState = (oldState, move) => {
     const num = move.cards.length;
 
-    let newState = {
-        pile1: oldState.pile1,
-        pile2: oldState.pile2,
-        pile3: oldState.pile3,
-        pile4: oldState.pile4,
-        pile5: oldState.pile5,
-        pile6: oldState.pile6,
-        pile7: oldState.pile7,
-        stack1: oldState.stack1,
-        stack2: oldState.stack2,
-        stack3: oldState.stack3,
-        stack4: oldState.stack4,
-        discard: oldState.discard,
-        draw: oldState.draw
-    }
+    // Clone old state, then modify src and dst piles
+    let newState = JSON.parse(JSON.stringify(oldState));
     newState[move.src] = newState[move.src].slice(0, newState[move.src].length - num);
     newState[move.dst] = newState[move.dst].concat(move.cards);
-    if (move.src !== 'draw' && newState[move.src].length > 0 &&
-        !(move.src === 'discard' && move.dst === 'draw'))
+
+    // If srcPile is a tableau pile and is not empty, flip the top card face up 
+    const tableauPiles = ['pile1', 'pile2', 'pile3', 'pile4', 'pile5', 'pile6', 'pile7'];
+    if (tableauPiles.includes(move.src) && newState[move.src].length > 0)
         newState[move.src][newState[move.src].length - 1].up = true;
     return newState;
 };
