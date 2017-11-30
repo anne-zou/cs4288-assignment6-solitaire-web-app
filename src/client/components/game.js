@@ -92,7 +92,7 @@ class Game extends Component { // TODO make draw count configurable
         this.setState({
             selected: null
         });
-         
+
     }
 
     onDrawPileClick(ev) { // one click, no need for separate from/to handling
@@ -104,7 +104,7 @@ class Game extends Component { // TODO make draw count configurable
             this.setState({ selected: null });
             return;
         }
-         
+
 
         const drawPile = this.state.draw;
         const discardPile = this.state.discard;
@@ -159,7 +159,7 @@ class Game extends Component { // TODO make draw count configurable
             this.setState({ selected: null });
             return;
         }
-         
+
 
         // Otherwise, only allow the top card to be clicked
         if (discardPile.length > 0 &&
@@ -173,7 +173,7 @@ class Game extends Component { // TODO make draw count configurable
                     index: discardPile.length - 1
                 }
             });
-             
+
         }
     }
 
@@ -181,8 +181,8 @@ class Game extends Component { // TODO make draw count configurable
         ev.stopPropagation(); // prevent event from bubbling up
 
         const targetid = ev.target.id;
-        // if the target was not an empty stack, targetid would be 
-        // <suit>:<rank> of the clicked card
+        // If the target is an empty pile, the id would be the stack id (which starts with 'stack')
+        // If the target is a card, targetid would be <suit>:<rank> of the clicked card
         const isEmptyPile = targetid.startsWith('stack');
 
         // Which stack was clicked?
@@ -221,7 +221,7 @@ class Game extends Component { // TODO make draw count configurable
             } else {
                 // Cancel selection
                 this.setState({ selected: null });
-                 
+
             }
 
             return;
@@ -236,7 +236,7 @@ class Game extends Component { // TODO make draw count configurable
                     index: thisStack.length - 1
                 }
             });
-             
+
         }
     }
 
@@ -248,8 +248,8 @@ class Game extends Component { // TODO make draw count configurable
         const targetCardSuit = targetCardAttributes[0];
         const targetCardRank = targetCardAttributes[1];
 
-        // if the target was not an empty stack, targetid would be 
-        // <suit>:<rank> of the clicked card
+        // If the target is an empty pile, the id would be the pile id (which starts with 'pile')
+        // If the target is a card, targetid would be <suit>:<rank> of the clicked card
         const isEmptyPile = targetid.startsWith('pile');
 
         // Which pile was clicked?
@@ -288,7 +288,7 @@ class Game extends Component { // TODO make draw count configurable
             } else {
                 // Cancel selection
                 this.setState({ selected: null });
-                 
+
             }
 
             return;
@@ -315,7 +315,7 @@ class Game extends Component { // TODO make draw count configurable
                     index: index // index of the bottommost card to be moved
                 }
             });
-             
+
 
         }
     }
@@ -363,54 +363,79 @@ class Game extends Component { // TODO make draw count configurable
 
     render() {
         console.log(this.state);
-        return <div onClick={this.onBackgroundClick}>
-            <div className="card-row">
-                <Pile
-                    pileId = {'stack1'}
-                    cards={this.state.stack1}
-                    spacing={0}
-                    onClick={this.onFoundationPileClick}
-                />
-                <Pile
-                    pileId = {'stack2'}
-                    cards={this.state.stack2}
-                    spacing={0}
-                    onClick={this.onFoundationPileClick}
-                />
-                <Pile
-                    pileId = {'stack3'}
-                    cards={this.state.stack3}
-                    spacing={0}
-                    onClick={this.onFoundationPileClick}
-                />
-                <Pile
-                    pileId = {'stack4'}
-                    cards={this.state.stack4}
-                    spacing={0}
-                    onClick={this.onFoundationPileClick}
-                />
-                <div className="card-row-gap"/>
-                <Pile
-                    cards={this.state.draw}
-                    spacing={0}
-                    onClick={this.onDrawPileClick}
-                />
-                <Pile
-                    cards={this.state.discard.slice(-1 * this.state.drawCount)}
-                    horizontal={true}
-                    onClick={this.onDiscardPileClick}
-                />
-            </div>
-            <div className="card-row">
-                <Pile pileId = {'pile1'} cards={this.state.pile1} onClick={this.onTableauPileClick}/>
-                <Pile pileId = {'pile2'} cards={this.state.pile2} onClick={this.onTableauPileClick}/>
-                <Pile pileId = {'pile3'} cards={this.state.pile3} onClick={this.onTableauPileClick}/>
-                <Pile pileId = {'pile4'} cards={this.state.pile4} onClick={this.onTableauPileClick}/>
-                <Pile pileId = {'pile5'} cards={this.state.pile5} onClick={this.onTableauPileClick}/>
-                <Pile pileId = {'pile6'} cards={this.state.pile6} onClick={this.onTableauPileClick}/>
-                <Pile pileId = {'pile7'} cards={this.state.pile7} onClick={this.onTableauPileClick}/>
-            </div>
-        </div>
+        return <div onClick = { this.onBackgroundClick } >
+            <
+            div className = "card-row" >
+            <
+            Pile
+        pileId = { 'stack1' }
+        cards = { this.state.stack1 }
+        spacing = { 0 }
+        onClick = { this.onFoundationPileClick }
+        /> <
+        Pile
+        pileId = { 'stack2' }
+        cards = { this.state.stack2 }
+        spacing = { 0 }
+        onClick = { this.onFoundationPileClick }
+        /> <
+        Pile
+        pileId = { 'stack3' }
+        cards = { this.state.stack3 }
+        spacing = { 0 }
+        onClick = { this.onFoundationPileClick }
+        /> <
+        Pile
+        pileId = { 'stack4' }
+        cards = { this.state.stack4 }
+        spacing = { 0 }
+        onClick = { this.onFoundationPileClick }
+        /> <
+        div className = "card-row-gap" / >
+            <
+            Pile
+        cards = { this.state.draw }
+        spacing = { 0 }
+        onClick = { this.onDrawPileClick }
+        /> <
+        Pile
+        cards = { this.state.discard.slice(-1 * this.state.drawCount) }
+        horizontal = { true }
+        onClick = { this.onDiscardPileClick }
+        /> < /
+        div > <
+            div className = "card-row" >
+            <
+            Pile pileId = { 'pile1' }
+        cards = { this.state.pile1 }
+        onClick = { this.onTableauPileClick }
+        /> <
+        Pile pileId = { 'pile2' }
+        cards = { this.state.pile2 }
+        onClick = { this.onTableauPileClick }
+        /> <
+        Pile pileId = { 'pile3' }
+        cards = { this.state.pile3 }
+        onClick = { this.onTableauPileClick }
+        /> <
+        Pile pileId = { 'pile4' }
+        cards = { this.state.pile4 }
+        onClick = { this.onTableauPileClick }
+        /> <
+        Pile pileId = { 'pile5' }
+        cards = { this.state.pile5 }
+        onClick = { this.onTableauPileClick }
+        /> <
+        Pile pileId = { 'pile6' }
+        cards = { this.state.pile6 }
+        onClick = { this.onTableauPileClick }
+        /> <
+        Pile pileId = { 'pile7' }
+        cards = { this.state.pile7 }
+        onClick = { this.onTableauPileClick }
+        /> < /
+        div > <
+            /div>
     }
 }
 
