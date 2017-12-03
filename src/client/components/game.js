@@ -39,21 +39,22 @@ class Game extends Component { // TODO make draw count configurable
         this.verifyMoveToTableau = this.verifyMoveToTableau.bind(this);
         this.verifyMoveToFoundation = this.verifyMoveToFoundation.bind(this);
         this.validateAndMakeMove = this.validateAndMakeMove.bind(this);
+        this.onAutocompleteClick = this.onAutocompleteClick.bind(this);
+        this.autocomplete = this.autocomplete.bind(this);
     }
 
     validateAndMakeMove(move) {
         this.setState({ selected: null });
+        console.log('move: ', move);
 
         // Send move to server to be validated
-        $.ajax({
+        return $.ajax({
                 url: `/v1/game/${this.props.match.params.id}`,
                 method: "put",
                 data: { move: move }
             }).then(newState => {
-                console.log('Move is valid');
                 this.setState(newState);
-            })
-            .fail(err => {
+            }).fail(err => {
                 console.log('Error making move');
                 console.log(err.error);
             });
@@ -92,7 +93,7 @@ class Game extends Component { // TODO make draw count configurable
         this.setState({
             selected: null
         });
-
+         
     }
 
     onDrawPileClick(ev) { // one click, no need for separate from/to handling
@@ -104,7 +105,7 @@ class Game extends Component { // TODO make draw count configurable
             this.setState({ selected: null });
             return;
         }
-
+         
 
         const drawPile = this.state.draw;
         const discardPile = this.state.discard;
@@ -124,21 +125,17 @@ class Game extends Component { // TODO make draw count configurable
                 dst: "discard"
             };
 
-            console.log(move);
-
             // Send move to server to be validated
             this.validateAndMakeMove(move);
 
         } else { // no cards left in the draw pile
             const move = {
-                cards: discardPile.reverse().map(card => {
+                cards: discardPile.slice().reverse().map(card => {
                     return { suit: card.suit, value: card.value, up: false };
                 }),
                 src: "discard",
                 dst: "draw"
             }
-
-            console.log(move);
 
             // Send move to server to be validated
             this.validateAndMakeMove(move);
@@ -159,7 +156,7 @@ class Game extends Component { // TODO make draw count configurable
             this.setState({ selected: null });
             return;
         }
-
+         
 
         // Otherwise, only allow the top card to be clicked
         if (discardPile.length > 0 &&
@@ -173,7 +170,7 @@ class Game extends Component { // TODO make draw count configurable
                     index: discardPile.length - 1
                 }
             });
-
+             
         }
     }
 
@@ -213,15 +210,13 @@ class Game extends Component { // TODO make draw count configurable
                     dst: thisStackId
                 };
 
-                console.log(move);
-
                 // Send move to server to be validated
                 this.validateAndMakeMove(move);
 
             } else {
                 // Cancel selection
                 this.setState({ selected: null });
-
+                 
             }
 
             return;
@@ -236,7 +231,7 @@ class Game extends Component { // TODO make draw count configurable
                     index: thisStack.length - 1
                 }
             });
-
+             
         }
     }
 
@@ -248,7 +243,7 @@ class Game extends Component { // TODO make draw count configurable
         const targetCardSuit = targetCardAttributes[0];
         const targetCardRank = targetCardAttributes[1];
 
-        // If the target is an empty pile, the id would be the pile id (which starts with 'pile')
+        // If the target is an empty pile, the id would be the stack id (which starts with 'stack')
         // If the target is a card, targetid would be <suit>:<rank> of the clicked card
         const isEmptyPile = targetid.startsWith('pile');
 
@@ -280,15 +275,13 @@ class Game extends Component { // TODO make draw count configurable
                     dst: thisPileId
                 };
 
-                console.log(move);
-
                 // Send move to server to be validated
                 this.validateAndMakeMove(move);
 
             } else {
                 // Cancel selection
                 this.setState({ selected: null });
-
+                 
             }
 
             return;
@@ -315,7 +308,7 @@ class Game extends Component { // TODO make draw count configurable
                     index: index // index of the bottommost card to be moved
                 }
             });
-
+             
 
         }
     }
@@ -361,82 +354,93 @@ class Game extends Component { // TODO make draw count configurable
         return ranks[nextIndex] === higherCardRank; // verify correct rank
     }
 
+    onAutocompleteClick(ev) {
+        ev.stopPropagation();
+        this.autocomplete();        
+    }
+
+    autocomplete() {
+
+        // Fetch all possible moves from current state
+        $.ajax({
+            url: '/v1/moves',
+            method: "get",
+            data: { state: JSON.stringify(this.state), drawCount: this.state.drawCount }
+        })
+        .then(moves => {
+
+            // Select the moves from tableau to foundation 
+            let autocompleteMoves = moves.filter(move =>
+                !move.src.startsWith('stack') && move.dst.startsWith('stack'));
+
+            // If there are no moves from tableau to foundation, we are done
+            if (autocompleteMoves.length === 0) return; 
+
+            // Make all the moves from tableau to foundation, then autocomplete again
+            this.validateAndMakeMove(autocompleteMoves[0])
+                .then(() => this.autocomplete())
+                .fail(() => console.log('Autocomplete move failed'));
+
+        }).fail(err => {
+            console.log('Error fetching possible moves');
+            console.log(err.error);
+        });
+    }
+
     render() {
-        console.log(this.state);
-        return <div onClick = { this.onBackgroundClick } >
-            <
-            div className = "card-row" >
-            <
-            Pile
-        pileId = { 'stack1' }
-        cards = { this.state.stack1 }
-        spacing = { 0 }
-        onClick = { this.onFoundationPileClick }
-        /> <
-        Pile
-        pileId = { 'stack2' }
-        cards = { this.state.stack2 }
-        spacing = { 0 }
-        onClick = { this.onFoundationPileClick }
-        /> <
-        Pile
-        pileId = { 'stack3' }
-        cards = { this.state.stack3 }
-        spacing = { 0 }
-        onClick = { this.onFoundationPileClick }
-        /> <
-        Pile
-        pileId = { 'stack4' }
-        cards = { this.state.stack4 }
-        spacing = { 0 }
-        onClick = { this.onFoundationPileClick }
-        /> <
-        div className = "card-row-gap" / >
-            <
-            Pile
-        cards = { this.state.draw }
-        spacing = { 0 }
-        onClick = { this.onDrawPileClick }
-        /> <
-        Pile
-        cards = { this.state.discard.slice(-1 * this.state.drawCount) }
-        horizontal = { true }
-        onClick = { this.onDiscardPileClick }
-        /> < /
-        div > <
-            div className = "card-row" >
-            <
-            Pile pileId = { 'pile1' }
-        cards = { this.state.pile1 }
-        onClick = { this.onTableauPileClick }
-        /> <
-        Pile pileId = { 'pile2' }
-        cards = { this.state.pile2 }
-        onClick = { this.onTableauPileClick }
-        /> <
-        Pile pileId = { 'pile3' }
-        cards = { this.state.pile3 }
-        onClick = { this.onTableauPileClick }
-        /> <
-        Pile pileId = { 'pile4' }
-        cards = { this.state.pile4 }
-        onClick = { this.onTableauPileClick }
-        /> <
-        Pile pileId = { 'pile5' }
-        cards = { this.state.pile5 }
-        onClick = { this.onTableauPileClick }
-        /> <
-        Pile pileId = { 'pile6' }
-        cards = { this.state.pile6 }
-        onClick = { this.onTableauPileClick }
-        /> <
-        Pile pileId = { 'pile7' }
-        cards = { this.state.pile7 }
-        onClick = { this.onTableauPileClick }
-        /> < /
-        div > <
-            /div>
+        return <div onClick={this.onBackgroundClick}>
+            <div>
+                <button type='button' onClick={this.onAutocompleteClick}>Autocomplete</button>
+            </div>
+            <div className="card-row">
+                <Pile
+                    pileId = {'stack1'}
+                    cards={this.state.stack1.slice(-1)}
+                    spacing={0}
+                    onClick={this.onFoundationPileClick}
+                />
+                <Pile
+                    pileId = {'stack2'}
+                    cards={this.state.stack2.slice(-1)}
+                    spacing={0}
+                    onClick={this.onFoundationPileClick}
+                />
+                <Pile
+                    pileId = {'stack3'}
+                    cards={this.state.stack3.slice(-1)}
+                    spacing={0}
+                    onClick={this.onFoundationPileClick}
+                />
+                <Pile
+                    pileId = {'stack4'}
+                    cards={this.state.stack4.slice(-1)}
+                    spacing={0}
+                    onClick={this.onFoundationPileClick}
+                />
+                <div className="card-row-gap"/>
+                <Pile
+                    cards={this.state.draw.slice(-1)}
+                    spacing={0}
+                    onClick={this.onDrawPileClick}
+                />
+                <Pile
+                    cards={this.state.discard.slice(-1 * this.state.drawCount)}
+                    horizontal={true}
+                    onClick={this.onDiscardPileClick}
+                />
+            </div>
+            <div className="card-row">
+                <Pile pileId = {'pile1'} cards={this.state.pile1} onClick={this.onTableauPileClick}/>
+                <Pile pileId = {'pile2'} cards={this.state.pile2} onClick={this.onTableauPileClick}/>
+                <Pile pileId = {'pile3'} cards={this.state.pile3} onClick={this.onTableauPileClick}/>
+                <Pile pileId = {'pile4'} cards={this.state.pile4} onClick={this.onTableauPileClick}/>
+                <Pile pileId = {'pile5'} cards={this.state.pile5} onClick={this.onTableauPileClick}/>
+                <Pile pileId = {'pile6'} cards={this.state.pile6} onClick={this.onTableauPileClick}/>
+                <Pile pileId = {'pile7'} cards={this.state.pile7} onClick={this.onTableauPileClick}/>
+            </div>
+        </div>
     }
 }
+
 
 export default withRouter(Game);

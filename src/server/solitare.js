@@ -265,5 +265,6 @@ module.exports = {
     shuffleCards: shuffleCards,
     initialState: initialState,
     filterForProfile: filterForProfile,
-    validateMove: validateMove
+    validateMove: validateMove,
+    validMoves: validMoves
 };

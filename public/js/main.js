@@ -3560,6 +3560,8 @@ var Game = function (_Component) {
         _this.verifyMoveToTableau = _this.verifyMoveToTableau.bind(_this);
         _this.verifyMoveToFoundation = _this.verifyMoveToFoundation.bind(_this);
         _this.validateAndMakeMove = _this.validateAndMakeMove.bind(_this);
+        _this.onAutocompleteClick = _this.onAutocompleteClick.bind(_this);
+        _this.autocomplete = _this.autocomplete.bind(_this);
         return _this;
     }
 
@@ -3569,14 +3571,14 @@ var Game = function (_Component) {
             var _this2 = this;
 
             this.setState({ selected: null });
+            console.log('move: ', move);
 
             // Send move to server to be validated
-            $.ajax({
+            return $.ajax({
                 url: '/v1/game/' + this.props.match.params.id,
                 method: "put",
                 data: { move: move }
             }).then(function (newState) {
-                console.log('Move is valid');
                 _this2.setState(newState);
             }).fail(function (err) {
                 console.log('Error making move');
@@ -3654,24 +3656,19 @@ var Game = function (_Component) {
                     dst: "discard"
                 };
 
-                console.log(move);
-
                 // Send move to server to be validated
                 this.validateAndMakeMove(move);
             } else {
                 // no cards left in the draw pile
                 var _move = {
-                    cards: discardPile.reverse().map(function (card) {
+                    cards: discardPile.slice().reverse().map(function (card) {
                         return { suit: card.suit, value: card.value, up: false };
                     }),
                     src: "discard",
                     dst: "draw"
-                };
 
-                console.log(_move);
-
-                // Send move to server to be validated
-                this.validateAndMakeMove(_move);
+                    // Send move to server to be validated
+                };this.validateAndMakeMove(_move);
             }
         }
     }, {
@@ -3709,8 +3706,8 @@ var Game = function (_Component) {
             ev.stopPropagation(); // prevent event from bubbling up
 
             var targetid = ev.target.id;
-            // if the target was not an empty stack, targetid would be 
-            // <suit>:<rank> of the clicked card
+            // If the target is an empty pile, the id would be the stack id (which starts with 'stack')
+            // If the target is a card, targetid would be <suit>:<rank> of the clicked card
             var isEmptyPile = targetid.startsWith('stack');
 
             // Which stack was clicked?
@@ -3734,8 +3731,6 @@ var Game = function (_Component) {
                         src: selected.src,
                         dst: thisStackId
                     };
-
-                    console.log(move);
 
                     // Send move to server to be validated
                     this.validateAndMakeMove(move);
@@ -3769,8 +3764,8 @@ var Game = function (_Component) {
             var targetCardSuit = targetCardAttributes[0];
             var targetCardRank = targetCardAttributes[1];
 
-            // if the target was not an empty stack, targetid would be 
-            // <suit>:<rank> of the clicked card
+            // If the target is an empty pile, the id would be the stack id (which starts with 'stack')
+            // If the target is a card, targetid would be <suit>:<rank> of the clicked card
             var isEmptyPile = targetid.startsWith('pile');
 
             // Which pile was clicked?
@@ -3795,8 +3790,6 @@ var Game = function (_Component) {
                         src: selected.src,
                         dst: thisPileId
                     };
-
-                    console.log(move);
 
                     // Send move to server to be validated
                     this.validateAndMakeMove(move);
@@ -3870,42 +3863,87 @@ var Game = function (_Component) {
             return ranks[nextIndex] === higherCardRank; // verify correct rank
         }
     }, {
+        key: 'onAutocompleteClick',
+        value: function onAutocompleteClick(ev) {
+            ev.stopPropagation();
+            this.autocomplete();
+        }
+    }, {
+        key: 'autocomplete',
+        value: function autocomplete() {
+            var _this4 = this;
+
+            // Fetch all possible moves from current state
+            $.ajax({
+                url: '/v1/moves',
+                method: "get",
+                data: { state: JSON.stringify(this.state), drawCount: this.state.drawCount }
+            }).then(function (moves) {
+
+                // Select the moves from tableau to foundation 
+                var autocompleteMoves = moves.filter(function (move) {
+                    return !move.src.startsWith('stack') && move.dst.startsWith('stack');
+                });
+
+                // If there are no moves from tableau to foundation, we are done
+                if (autocompleteMoves.length === 0) return;
+
+                // Make all the moves from tableau to foundation, then autocomplete again
+                _this4.validateAndMakeMove(autocompleteMoves[0]).then(function () {
+                    return _this4.autocomplete();
+                }).fail(function () {
+                    return console.log('Autocomplete move failed');
+                });
+            }).fail(function (err) {
+                console.log('Error fetching possible moves');
+                console.log(err.error);
+            });
+        }
+    }, {
         key: 'render',
         value: function render() {
-            console.log(this.state);
             return _react2.default.createElement(
                 'div',
                 { onClick: this.onBackgroundClick },
                 _react2.default.createElement(
                     'div',
+                    null,
+                    _react2.default.createElement(
+                        'button',
+                        { type: 'button', onClick: this.onAutocompleteClick },
+                        'Autocomplete'
+                    )
+                ),
+                _react2.default.createElement(
+                    'div',
                     { className: 'card-row' },
                     _react2.default.createElement(_pile.Pile, {
                         pileId: 'stack1',
-                        cards: this.state.stack1,
+                        cards: this.state.stack1.slice(-1),
                         spacing: 0,
                         onClick: this.onFoundationPileClick
                     }),
                     _react2.default.createElement(_pile.Pile, {
                         pileId: 'stack2',
-                        cards: this.state.stack2,
+                        cards: this.state.stack2.slice(-1),
                         spacing: 0,
                         onClick: this.onFoundationPileClick
                     }),
                     _react2.default.createElement(_pile.Pile, {
                         pileId: 'stack3',
-                        cards: this.state.stack3,
+                        cards: this.state.stack3.slice(-1),
                         spacing: 0,
                         onClick: this.onFoundationPileClick
                     }),
                     _react2.default.createElement(_pile.Pile, {
                         pileId: 'stack4',
-                        cards: this.state.stack4,
+                        cards: this.state.stack4.slice(-1),
                         spacing: 0,
                         onClick: this.onFoundationPileClick
                     }),
                     _react2.default.createElement('div', { className: 'card-row-gap' }),
                     _react2.default.createElement(_pile.Pile, {
-                        cards: this.state.draw,
+                        cards: this.state.draw.slice(-1),
                         spacing: 0,
                         onClick: this.onDrawPileClick
                     }),
@@ -3979,6 +4017,7 @@ var Card = exports.Card = function Card(_ref) {
         onClick = _ref.onClick,
         pileId = _ref.pileId;
 
+    if (card.up == 'true') card.up = true;else if (card.up == 'false') card.up = false;
     var source = card.up ? '/images/' + card.value + '_of_' + card.suit + '.png' : "/images/face_down.jpg";
     var style = { left: left + '%', top: top + '%' };
     var id = card.suit + ':' + card.value;

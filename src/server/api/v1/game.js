@@ -155,6 +155,17 @@ module.exports = app => {
 
     });
 
+    // Fetch list of all possible moves given a game state
+    app.get('/v1/moves', (req, res) => {
+        let state = JSON.parse(req.query.state);
+        ['stack1', 'stack2', 'stack3', 'stack4',
+            'pile1', 'pile2', 'pile3', 'pile4', 'pile5', 'pile6', 'pile7',
+            'draw', 'discard'
+        ].forEach(pile => {
+            if (!state[pile]) state[pile] = [];
+        });
+        res.send(Solitare.validMoves(state, req.query.drawCount));
+    });
 
     // Provide end-point to request shuffled deck of cards and initial state - for testing
     app.get('/v1/cards/shuffle', (req, res) => {

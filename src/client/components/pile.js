@@ -8,6 +8,8 @@ import {} from './card.css';
 /*************************************************************************/
 
 export const Card = ({ card, top, left, onClick, pileId }) => {
+    if (card.up == 'true') card.up = true;
+    else if (card.up == 'false') card.up = false;
     const source = card.up ? `/images/${card.value}_of_${card.suit}.png` : "/images/face_down.jpg";
     const style = { left: `${left}%`, top: `${top}%` };
     const id = `${card.suit}:${card.value}`;
