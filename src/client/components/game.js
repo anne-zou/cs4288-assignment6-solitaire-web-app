@@ -376,7 +376,7 @@ class Game extends Component { // TODO make draw count configurable
 
             // Make all the moves from tableau to foundation, then autocomplete again
             this.validateAndMakeMove(autocompleteMoves[0])
-                .then(() => setTimeout(() => this.autocomplete(), 300))
+                .then(() => setTimeout(() => this.autocomplete(), 100))
                 .fail(() => console.log('Autocomplete move failed'));
 
         }).fail(err => {
