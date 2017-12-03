@@ -189,7 +189,7 @@ let validMoves = (state, drawCount) => {
     // The possible draw move
     if (state.draw.length === 0) { // empty draw pile
         validMoves.push({
-            cards: state.discard.reverse().map(card => {
+            cards: state.discard.slice(0).reverse().map(card => {
                 return {
                     suit: card.suit,
                     value: card.value,
@@ -222,6 +222,7 @@ let getNewState = (oldState, move) => {
 
     // Clone old state, then modify src and dst piles
     let newState = JSON.parse(JSON.stringify(oldState));
+
     newState[move.src] = newState[move.src].slice(0, newState[move.src].length - num);
     newState[move.dst] = newState[move.dst].concat(move.cards);
 

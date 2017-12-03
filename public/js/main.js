@@ -3571,7 +3571,6 @@ var Game = function (_Component) {
             var _this2 = this;
 
             this.setState({ selected: null });
-            console.log('move: ', move);
 
             // Send move to server to be validated
             return $.ajax({
@@ -3644,7 +3643,7 @@ var Game = function (_Component) {
             // Move drawCount cards (or all remaining cards, whichever is less) to discard pile
             var num = this.state.draw.length > this.state.drawCount ? this.state.drawCount : this.state.draw.length;
 
-            if (num != 0) {
+            if (num !== 0) {
                 // There are still cards left in the draw pile
                 // Create the move
                 var move = {
@@ -3661,7 +3660,7 @@ var Game = function (_Component) {
             } else {
                 // no cards left in the draw pile
                 var _move = {
-                    cards: discardPile.slice().reverse().map(function (card) {
+                    cards: discardPile.slice(0).reverse().map(function (card) {
                         return { suit: card.suit, value: card.value, up: false };
                     }),
                     src: "discard",
@@ -3890,7 +3889,9 @@ var Game = function (_Component) {
 
                 // Make all the moves from tableau to foundation, then autocomplete again
                 _this4.validateAndMakeMove(autocompleteMoves[0]).then(function () {
-                    return _this4.autocomplete();
+                    return setTimeout(function () {
+                        return _this4.autocomplete();
+                    }, 300);
                 }).fail(function () {
                     return console.log('Autocomplete move failed');
                 });

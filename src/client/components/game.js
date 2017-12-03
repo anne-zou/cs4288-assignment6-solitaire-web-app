@@ -45,8 +45,7 @@ class Game extends Component { // TODO make draw count configurable
 
     validateAndMakeMove(move) {
         this.setState({ selected: null });
-        console.log('move: ', move);
-
+        
         // Send move to server to be validated
         return $.ajax({
                 url: `/v1/game/${this.props.match.params.id}`,
@@ -114,7 +113,7 @@ class Game extends Component { // TODO make draw count configurable
         let num = (this.state.draw.length > this.state.drawCount) ?
             this.state.drawCount : this.state.draw.length;
 
-        if (num != 0) { // There are still cards left in the draw pile
+        if (num !== 0) { // There are still cards left in the draw pile
             // Create the move
             const move = {
                 // cards[0] should be the first to be appended to the destination pile
@@ -130,7 +129,7 @@ class Game extends Component { // TODO make draw count configurable
 
         } else { // no cards left in the draw pile
             const move = {
-                cards: discardPile.slice().reverse().map(card => {
+                cards: discardPile.slice(0).reverse().map(card => {
                     return { suit: card.suit, value: card.value, up: false };
                 }),
                 src: "discard",
@@ -360,7 +359,6 @@ class Game extends Component { // TODO make draw count configurable
     }
 
     autocomplete() {
-
         // Fetch all possible moves from current state
         $.ajax({
             url: '/v1/moves',
@@ -378,7 +376,7 @@ class Game extends Component { // TODO make draw count configurable
 
             // Make all the moves from tableau to foundation, then autocomplete again
             this.validateAndMakeMove(autocompleteMoves[0])
-                .then(() => this.autocomplete())
+                .then(() => setTimeout(() => this.autocomplete(), 300))
                 .fail(() => console.log('Autocomplete move failed'));
 
         }).fail(err => {
@@ -386,6 +384,7 @@ class Game extends Component { // TODO make draw count configurable
             console.log(err.error);
         });
     }
+
 
     render() {
         return <div onClick={this.onBackgroundClick}>

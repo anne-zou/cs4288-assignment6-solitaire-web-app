@@ -21,8 +21,10 @@ app.use(express.static(path.join(__dirname, '../../public')));
 if (env !== 'test') app.use(logger('dev'));
 app.engine('pug', require('pug').__express);
 app.set('views', __dirname);
+
 // Setup pipeline session support
-const redisOptions = {
+
+const redisOptions = (env === 'production') ? { url: process.env.REDIS_URL } : {
     host: 'localhost',
     port: '32769'
 };
@@ -42,11 +44,15 @@ app.use(session({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Connect to mongoBD
+// Connect to mongoDB
 let options = {
     useMongoClient: true
 };
-mongoose.connect('mongodb://localhost:32768/heminggs', options)
+
+const mongoUrl = (env === 'production') ?
+    process.env.MONGODB_URI : 'mongodb://localhost:32768/zoua';
+
+mongoose.connect(mongoUrl, options)
     .then(() => {
         console.log('\t MongoDB connected');
 
