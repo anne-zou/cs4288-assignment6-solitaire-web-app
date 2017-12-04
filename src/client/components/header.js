@@ -38,9 +38,9 @@ class Header extends Component {
                 <Link to="/login">Log In</Link>
                 <Link to="/register">Register</Link>
             </div>;
-        return <nav className="navbar navbar-default navbar-static-top">
+        return <nav style={{backgroundColor: 'powderblue'}} className="navbar navbar-default navbar-static-top">
             <div className="col-xs-8">
-                <h2>Graham's Solitaire</h2>
+                <h2 style={{fontFamily: 'monospace'}}>Anne's Solitarino Applicatino</h2>
             </div>
             {right}
         </nav>

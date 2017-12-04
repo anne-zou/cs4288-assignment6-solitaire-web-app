@@ -389,7 +389,8 @@ class Game extends Component { // TODO make draw count configurable
     render() {
         return <div onClick={this.onBackgroundClick}>
             <div>
-                <button type='button' onClick={this.onAutocompleteClick}>Autocomplete</button>
+                <button type='button' style={{marginBottom: '10px', fontFamily: 'monospace'}} 
+                    onClick={this.onAutocompleteClick}>Autocomplete</button>
             </div>
             <div className="card-row">
                 <Pile
